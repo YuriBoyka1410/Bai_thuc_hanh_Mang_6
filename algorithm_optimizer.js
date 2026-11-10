@@ -1,7 +1,14 @@
-// ===================================
-// 1. DỮ LIỆU ĐẦU VÀO MEGASTORE
-// ===================================
+// ============================================================
+// MEGASTORE - ALGORITHM OPTIMIZER VERSION 2
+// 1. Flatten
+// 2. Bubble Sort
+// 3. Quick Sort (Median-of-three)
+// 4. Linear Search
+// 5. Binary Search
+// 6. Benchmark Legacy vs Optimized
+// ============================================================
 
+// 1. DỮ LIỆU MẪU
 const mega_store = [
   {
     category: "Điện thoại",
@@ -25,102 +32,145 @@ const mega_store = [
     ],
   },
 ];
-console.log(mega_store);
 
-// Hàm Flatten làm phẳng dữ liệu
+// 2. FLATTEN - LÀM PHẲNG MẢNG
 function flatten_products(data) {
-  //Bước 1: Tạo mảng rỗng để chứa sản phẩm
   let result = [];
-  //Bước 2: Duyệt từng danh mục
+
   for (let i = 0; i < data.length; i++) {
-    //Lấy list sản phẩm của danh mục hiện tại
     let products = data[i].products;
-    //Bước 3: Duyệt từng sản phẩm
+
     for (let j = 0; j < products.length; j++) {
-      //Bước 4: Đưa sản phẩm vào mảng kết quả
       result.push(products[j]);
     }
   }
+
   return result;
 }
-const all_products = flatten_products(mega_store);
-console.log(all_products);
 
-//Hàm sắp xếp nhanh
+// 3. HÀM SWAP - ĐỔI CHỖ HAI PHẦN TỬ
 function swap(arr, i, j) {
   let temp = arr[i];
   arr[i] = arr[j];
   arr[j] = temp;
 }
 
-function partition(arr, left, right) {
-  let pivot = arr[right].price;
-  let i = left - 1;
-  for (let j = left; j < right; j++) {
-    if (arr[j].price <= pivot) {
-      i++;
-      swap(arr, i, j);
+// 4. BUBBLE SORT - THUẬT TOÁN CŨ
+function bubbleSort(arr) {
+  for (let i = 0; i < arr.length - 1; i++) {
+    let swapped = false;
+
+    for (let j = 0; j < arr.length - 1 - i; j++) {
+      if (arr[j].price > arr[j + 1].price) {
+        swap(arr, j, j + 1);
+        swapped = true;
+      }
+    }
+
+    if (swapped === false) {
+      break;
     }
   }
-  swap(arr, i + 1, right);
-  return i + 1;
 }
 
-function quick_sort(arr, left, right) {
-  if (left < right) {
-    let pivot_index = partition(arr, left, right);
-    quick_sort(arr, left, pivot_index - 1);
-    quick_sort(arr, pivot_index + 1, right);
+// 5. QUICK SORT - MEDIAN OF THREE
+function medianOfThree(arr, left, right) {
+  let middle = Math.floor((left + right) / 2);
+
+  let first = arr[left].price;
+  let mid = arr[middle].price;
+  let last = arr[right].price;
+
+  if ((first <= mid && mid <= last) || (last <= mid && mid <= first)) {
+    return mid;
   }
+
+  if ((mid <= first && first <= last) || (last <= first && first <= mid)) {
+    return first;
+  }
+
+  return last;
 }
 
-quick_sort(all_products, 0, all_products.length - 1);
-console.log("Sản phẩm sau khi sắp xếp: ");
-console.log(all_products);
+// 6. PARTITION - PHÂN CHIA MẢNG THÀNH 3 VÙNG
+function partition(arr, left, right) {
+  let pivot = medianOfThree(arr, left, right);
 
-//Tìm kiếm nhị phân
-function binary_search(arr, target) {
+  let low = left;
+  let current = left;
+  let high = right;
+
+  while (current <= high) {
+    if (arr[current].price < pivot) {
+      swap(arr, low, current);
+      low++;
+      current++;
+    } else if (arr[current].price > pivot) {
+      swap(arr, current, high);
+      high--;
+    } else {
+      current++;
+    }
+  }
+
+  return [low, high];
+}
+
+// 7. QUICK SORT
+function quickSort(arr, left, right) {
+  if (left >= right) {
+    return;
+  }
+
+  let pivotRange = partition(arr, left, right);
+
+  let low = pivotRange[0];
+  let high = pivotRange[1];
+
+  quickSort(arr, left, low - 1);
+  quickSort(arr, high + 1, right);
+}
+
+// 8. LINEAR SEARCH
+function linearSearchByPrice(arr, target) {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i].price === target) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+// 9. BINARY SEARCH
+function binarySearch(arr, target) {
   let left = 0;
   let right = arr.length - 1;
+
   while (left <= right) {
     let mid = Math.floor((left + right) / 2);
+
     if (arr[mid].price === target) {
       return mid;
     }
+
     if (arr[mid].price < target) {
       left = mid + 1;
     } else {
       right = mid - 1;
     }
   }
+
   return -1;
 }
-let result = binary_search(all_products, 18000000);
-if (result !== -1) {
-  console.log("Đã tìm thấy sản phẩm:");
-  console.log(all_products[result]);
-} else {
-  console.log("Không tìm thấy sản phẩm!");
-}
 
-//So sánh
-function bubbleSort(arr) {
-  for (let i = 0; i < arr.length - 1; i++) {
-    for (let j = 0; j < arr.length - 1 - i; j++) {
-      if (arr[j].price > arr[j + 1].price) {
-        swap(arr, j, j + 1);
-      }
-    }
-  }
-}
+// 10. LEGACY - DUYỆT MẢNG LỒNG NHAU + BUBBLE SORT
 function legacySearchAndSort(data, keyword) {
   let result = [];
 
-  // Duyệt từng danh mục
   for (let i = 0; i < data.length; i++) {
     let products = data[i].products;
 
-    // Duyệt từng sản phẩm
     for (let j = 0; j < products.length; j++) {
       if (products[j].name.includes(keyword)) {
         result.push(products[j]);
@@ -128,11 +178,12 @@ function legacySearchAndSort(data, keyword) {
     }
   }
 
-  // Sắp xếp kết quả bằng Bubble Sort
   bubbleSort(result);
 
   return result;
 }
+
+// 11. OPTIMIZED - FLATTEN + QUICK SORT
 function optimizedSearchAndSort(data, keyword) {
   let allProducts = flatten_products(data);
   let result = [];
@@ -147,6 +198,10 @@ function optimizedSearchAndSort(data, keyword) {
 
   return result;
 }
+
+// 12. TẠO DỮ LIỆU KIỂM THỬ
+// Cứ 100 sản phẩm có 1 sản phẩm khớp Target.
+// Tỷ lệ khớp = 1%.
 function generateMegaStore(totalProducts) {
   let data = [];
   let categorySize = 1000;
@@ -166,16 +221,18 @@ function generateMegaStore(totalProducts) {
 
       let productName;
 
-      if (id % 1000 === 0) {
+      if (id % 100 === 0) {
         productName = "Target Product " + id;
       } else {
         productName = "Product " + id;
       }
 
+      let price = ((id * 7919) % totalProducts) * 10 + 500;
+
       let product = {
         id: id,
         name: productName,
-        price: id * 10 + 500,
+        price: price,
       };
 
       category.products.push(product);
@@ -187,100 +244,136 @@ function generateMegaStore(totalProducts) {
 
   return data;
 }
-let testSizes = [1000, 10000, 500000];
 
-for (let i = 0; i < testSizes.length; i++) {
-  let size = testSizes[i];
+// 13. KIỂM TRA HAI KẾT QUẢ CÓ GIỐNG NHAU KHÔNG
+function compareResults(first, second) {
+  if (first.length !== second.length) {
+    return false;
+  }
 
-  console.log("------------------------------------");
-  console.log("KIỂM TRA VỚI", size, "SẢN PHẨM");
-  console.log("------------------------------------");
-
-  let testData = generateMegaStore(size);
-
-  console.time("Legacy - " + size);
-
-  let legacyResult = legacySearchAndSort(testData, "Target");
-
-  console.timeEnd("Legacy - " + size);
-
-  console.time("Optimized - " + size);
-
-  let optimizedResult = optimizedSearchAndSort(testData, "Target");
-
-  console.timeEnd("Optimized - " + size);
-
-  console.log("Legacy tìm được:", legacyResult.length);
-  console.log("Optimized tìm được:", optimizedResult.length);
-
-  console.log(
-    "Sản phẩm đầu tiên Legacy:",
-    legacyResult.length > 0 ? legacyResult[0] : "Không có",
-  );
-
-  console.log(
-    "Sản phẩm đầu tiên Optimized:",
-    optimizedResult.length > 0 ? optimizedResult[0] : "Không có",
-  );
-}
-
-// ==========================================
-// 11. LINEAR SEARCH
-// ==========================================
-
-function linearSearchByPrice(arr, target) {
-  for (let i = 0; i < arr.length; i++) {
-    if (arr[i].price === target) {
-      return i;
+  for (let i = 0; i < first.length; i++) {
+    if (first[i].id !== second[i].id || first[i].price !== second[i].price) {
+      return false;
     }
   }
 
-  return -1;
+  return true;
 }
 
-// ==========================================
-// 12. SO SÁNH LINEAR SEARCH VÀ BINARY SEARCH
-// ==========================================
+// 14. SO SÁNH LEGACY VÀ OPTIMIZED
+function benchmarkLegacyVsOptimized() {
+  let testSizes = [1000, 10000, 500000];
 
+  console.log("\n====================================");
+  console.log("BENCHMARK: LEGACY VS OPTIMIZED");
+  console.log("====================================");
+
+  for (let i = 0; i < testSizes.length; i++) {
+    let size = testSizes[i];
+    let testData = generateMegaStore(size);
+
+    console.log("\n------------------------------------");
+    console.log("SỐ LƯỢNG SẢN PHẨM:", size);
+    console.log("------------------------------------");
+
+    console.time("Legacy - " + size);
+
+    let legacyResult = legacySearchAndSort(testData, "Target");
+
+    console.timeEnd("Legacy - " + size);
+
+    console.time("Optimized - " + size);
+
+    let optimizedResult = optimizedSearchAndSort(testData, "Target");
+
+    console.timeEnd("Optimized - " + size);
+
+    console.log("Số kết quả Legacy:", legacyResult.length);
+    console.log("Số kết quả Optimized:", optimizedResult.length);
+
+    console.log(
+      "Hai kết quả giống nhau:",
+      compareResults(legacyResult, optimizedResult),
+    );
+  }
+}
+
+// 15. SO SÁNH LINEAR SEARCH VÀ BINARY SEARCH
 function benchmarkSearch(totalProducts) {
-  console.log("====================================");
-  console.log("SO SÁNH TÌM KIẾM:", totalProducts, "SẢN PHẨM");
-  console.log("====================================");
-
   let testData = generateMegaStore(totalProducts);
 
   let allProducts = flatten_products(testData);
 
-  // Phải sắp xếp trước khi sử dụng Binary Search
+  // Binary Search bắt buộc phải có mảng đã sắp xếp.
   quickSort(allProducts, 0, allProducts.length - 1);
 
-  // Chọn sản phẩm có giá cao nhất để Linear Search phải duyệt gần hết mảng
+  // Chọn giá trị lớn nhất.
   let target = allProducts[allProducts.length - 1].price;
 
   let repetitions = 1000;
-  let result;
 
-  console.time("Linear Search - " + totalProducts);
+  let linearResult = -1;
+  let binaryResult = -1;
 
-  for (let i = 0; i < repetitions; i++) {
-    result = linearSearchByPrice(allProducts, target);
-  }
+  console.log("\n------------------------------------");
+  console.log("LINEAR VS BINARY:", totalProducts);
+  console.log("------------------------------------");
 
-  console.timeEnd("Linear Search - " + totalProducts);
-
-  console.time("Binary Search - " + totalProducts);
+  console.time("Linear Search x1000 - " + totalProducts);
 
   for (let i = 0; i < repetitions; i++) {
-    result = binarySearch(allProducts, target);
+    linearResult = linearSearchByPrice(allProducts, target);
   }
 
-  console.timeEnd("Binary Search - " + totalProducts);
+  console.timeEnd("Linear Search x1000 - " + totalProducts);
+
+  console.time("Binary Search x1000 - " + totalProducts);
+
+  for (let i = 0; i < repetitions; i++) {
+    binaryResult = binarySearch(allProducts, target);
+  }
+
+  console.timeEnd("Binary Search x1000 - " + totalProducts);
 
   console.log("Giá cần tìm:", target);
-  console.log("Vị trí tìm thấy:", result);
+  console.log("Linear Search trả về:", linearResult);
+  console.log("Binary Search trả về:", binaryResult);
+
+  console.log(
+    "Cả hai đều tìm thấy:",
+    linearResult !== -1 && binaryResult !== -1,
+  );
 }
 
-// Chạy kiểm tra với 3 kích thước dữ liệu
+// 16. KIỂM TRA DỮ LIỆU MẪU
+function runSampleTest() {
+  console.log("====================================");
+  console.log("KIỂM TRA DỮ LIỆU MẪU");
+  console.log("====================================");
+
+  let allProducts = flatten_products(mega_store);
+
+  console.log("Số sản phẩm sau Flatten:", allProducts.length);
+
+  quickSort(allProducts, 0, allProducts.length - 1);
+
+  console.log("Danh sách sau Quick Sort:");
+  console.log(allProducts);
+
+  let target = allProducts[0].price;
+
+  console.log("Giá cần tìm:", target);
+
+  console.log("Linear Search:", linearSearchByPrice(allProducts, target));
+
+  console.log("Binary Search:", binarySearch(allProducts, target));
+}
+
+// 17. CHẠY TOÀN BỘ CHƯƠNG TRÌNH
+runSampleTest();
+
+benchmarkLegacyVsOptimized();
+
 benchmarkSearch(1000);
 benchmarkSearch(10000);
 benchmarkSearch(500000);
